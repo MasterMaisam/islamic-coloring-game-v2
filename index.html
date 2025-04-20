@@ -33,6 +33,9 @@
       border: 2px solid #ddd;
       touch-action: none;
       background: #fff;
+      width: 90vw;
+      max-width: 400px;
+      height: 400px;
     }
 
     .colors {
@@ -70,10 +73,6 @@
       border-radius: 8px;
       background-color: #ffc107;
       cursor: pointer;
-    }
-
-    .level-buttons button:hover, .control-buttons button:hover {
-      background-color: #e0a800;
     }
 
     .popup, #certificatePopup {
@@ -141,6 +140,7 @@
     <button onclick="document.getElementById('certificatePopup').classList.remove('show')">❌ Close</button>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -230,6 +230,7 @@
 
     function showCertificate() {
       document.getElementById('certificatePopup').classList.add('show');
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
     }
 
     let currentLevel = 0;
@@ -244,7 +245,7 @@
           completedLevels.add(index);
           showPopup();
           if (completedLevels.size === levels.length) {
-            setTimeout(showCertificate, 1600);
+            setTimeout(showCertificate, 1500);
           }
         }
       };
