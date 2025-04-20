@@ -6,15 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
+      margin: 0;
+      text-align: center;
       background-image: url('background.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      margin: 0;
-      text-align: center;
-      background: #f2f6f3;
       font-family: Arial, sans-serif;
     }
+
     h1 {
       background: linear-gradient(90deg, #ff6a00, #ffcc00, #33cc33, #0099ff, #cc33ff);
       -webkit-background-clip: text;
@@ -23,20 +23,25 @@
       animation: colorFade 4s infinite ease-in-out;
       margin: 20px auto 10px;
     }
+
     @keyframes colorFade {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.8; transform: scale(1.1); }
     }
+
     #canvas {
       border: 2px solid #ddd;
       touch-action: none;
+      background: #fff;
     }
+
     .colors {
       display: flex;
       justify-content: center;
       margin: 10px 0;
       flex-wrap: wrap;
     }
+
     .color {
       width: 40px;
       height: 40px;
@@ -45,16 +50,19 @@
       border: 2px solid #333;
       cursor: pointer;
     }
+
     .color.active {
       border: 3px solid black;
     }
-    .level-buttons {
+
+    .level-buttons, .control-buttons {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       margin-top: 10px;
     }
-    .level-buttons button {
+
+    .level-buttons button, .control-buttons button {
       margin: 5px;
       padding: 10px 15px;
       font-size: 16px;
@@ -63,61 +71,39 @@
       background-color: #ffc107;
       cursor: pointer;
     }
-    .level-buttons button:hover {
+
+    .level-buttons button:hover, .control-buttons button:hover {
       background-color: #e0a800;
     }
-    .intro-box {
-      background: #fff9e6;
-      padding: 15px;
-      margin: 15px auto;
-      max-width: 90%;
-      border: 2px dashed #ffd54f;
-      border-radius: 12px;
-      font-size: 1em;
-      color: #444;
-    }
-    #levelComplete {
+
+    .popup, #certificatePopup {
       display: none;
-      background-color: #dff0d8;
-      border: 2px solid #3c763d;
-      color: #3c763d;
-      padding: 15px;
-      margin: 10px auto;
-      width: 90%;
-      font-size: 1.2em;
-      border-radius: 10px;
-      animation: popUp 0.6s ease-out;
-    }
-    #certificate {
-      display: none;
-      margin: 20px auto;
-      padding: 20px;
-      border: 3px dashed #4caf50;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background: #ffffff;
-      color: #2e7d32;
-      font-size: 1.4em;
-      max-width: 90%;
-      border-radius: 15px;
+      border: 3px solid #4caf50;
+      padding: 20px;
+      border-radius: 12px;
+      z-index: 1000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-    @keyframes popUp {
-      0% { transform: scale(0.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+
+    .popup.show, #certificatePopup.show {
+      display: block;
+    }
+
+    .popup button, #certificatePopup button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <h1>🎨 Islamic Coloring Game: 5 Pillars of Islam</h1>
-  <div class="intro-box">
-    <p><strong>Welcome, little artist!</strong> 🎉</p>
-    <p>In this game, you’ll learn about the <strong>5 Pillars of Islam</strong> through fun and creativity! 🎨</p>
-    <p><strong>How to Play:</strong></p>
-    <ul style="text-align: left; max-width: 600px; margin: auto;">
-      <li>🖌️ Choose your favorite color from the palette below.</li>
-      <li>👆 Use your finger or mouse to color the picture.</li>
-      <li>📜 Click each button to explore a new pillar of Islam!</li>
-      <li>🌟 Enjoy and learn as you color!</li>
-    </ul>
-  </div>
+
   <div class="level-buttons">
     <button onclick="loadLevel(0)">🕌 Shahadah</button>
     <button onclick="loadLevel(1)">🕋 Salah</button>
@@ -125,9 +111,14 @@
     <button onclick="loadLevel(3)">💰 Zakat</button>
     <button onclick="loadLevel(4)">🕊 Hajj</button>
   </div>
-  <div id="levelComplete">🎉 Level Completed!</div>
-  <div id="certificate">🧾 MashaAllah! You have completed all 5 levels of the game. You're a true Islamic star! ⭐️</div>
+
+  <div class="control-buttons">
+    <button onclick="resetCanvas()">🔄 Reset</button>
+    <button onclick="undoStroke()">↩️ Undo</button>
+  </div>
+
   <canvas id="canvas" width="350" height="400"></canvas>
+
   <div class="colors" id="colorPalette">
     <div class="color active" style="background:#000000"></div>
     <div class="color" style="background:#ff0000"></div>
@@ -138,13 +129,29 @@
     <div class="color" style="background:#964B00"></div>
     <div class="color" style="background:#ffffff"></div>
   </div>
+
+  <div class="popup" id="levelPopup">
+    🎉 Level Completed!
+    <br><button onclick="closePopup()">OK</button>
+  </div>
+
+  <div id="certificatePopup">
+    🧾 MashaAllah! You have completed all 5 levels of the game. You're a true Islamic star! ⭐️<br>
+    <button onclick="restartGame()">🔁 Play Again</button>
+    <button onclick="document.getElementById('certificatePopup').classList.remove('show')">❌ Close</button>
+  </div>
+
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let painting = false;
     let currentColor = '#000000';
     const completedLevels = new Set();
-    const levels = ['shahadah.png','salah.png','sawm.png','zakat.png','hajj.png'];
+    let paths = [];
+    let currentPath = [];
+
+    const levels = ['shahadah.png', 'salah.png', 'sawm.png', 'zakat.png', 'hajj.png'];
+
     document.getElementById('colorPalette').addEventListener('click', function(e) {
       if (e.target.classList.contains('color')) {
         document.querySelectorAll('.color').forEach(c => c.classList.remove('active'));
@@ -152,8 +159,19 @@
         currentColor = e.target.style.backgroundColor;
       }
     });
-    function startPosition(e) { painting = true; draw(e); }
-    function endPosition() { painting = false; ctx.beginPath(); }
+
+    function startPosition(e) {
+      painting = true;
+      currentPath = [];
+      draw(e);
+    }
+
+    function endPosition() {
+      painting = false;
+      ctx.beginPath();
+      if (currentPath.length > 0) paths.push(currentPath);
+    }
+
     function draw(e) {
       if (!painting) return;
       const rect = canvas.getBoundingClientRect();
@@ -166,34 +184,79 @@
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(x, y);
+      currentPath.push({x, y, color: currentColor});
     }
+
     canvas.addEventListener('mousedown', startPosition);
     canvas.addEventListener('mouseup', endPosition);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('touchstart', startPosition);
     canvas.addEventListener('touchend', endPosition);
     canvas.addEventListener('touchmove', draw);
-    function showLevelComplete() {
-      const msg = document.getElementById('levelComplete');
-      msg.style.display = 'block';
-      setTimeout(() => msg.style.display = 'none', 1500);
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      paths = [];
+      loadLevel(currentLevel);
     }
+
+    function undoStroke() {
+      paths.pop();
+      redraw();
+    }
+
+    function redraw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      loadLevel(currentLevel, false);
+      for (const path of paths) {
+        ctx.beginPath();
+        for (let i = 0; i < path.length; i++) {
+          ctx.strokeStyle = path[i].color;
+          ctx.lineTo(path[i].x, path[i].y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(path[i].x, path[i].y);
+        }
+      }
+    }
+
+    function showPopup() {
+      document.getElementById('levelPopup').classList.add('show');
+    }
+
+    function closePopup() {
+      document.getElementById('levelPopup').classList.remove('show');
+    }
+
     function showCertificate() {
-      document.getElementById('certificate').style.display = 'block';
+      document.getElementById('certificatePopup').classList.add('show');
     }
-    function loadLevel(index) {
+
+    let currentLevel = 0;
+    function loadLevel(index, show = true) {
+      currentLevel = index;
       const img = new Image();
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        showLevelComplete();
-        completedLevels.add(index);
-        if (completedLevels.size === levels.length) {
-          setTimeout(showCertificate, 1600);
+        paths = [];
+        if (show) {
+          completedLevels.add(index);
+          showPopup();
+          if (completedLevels.size === levels.length) {
+            setTimeout(showCertificate, 1600);
+          }
         }
       };
       img.src = levels[index];
     }
+
+    function restartGame() {
+      completedLevels.clear();
+      document.getElementById('certificatePopup').classList.remove('show');
+      loadLevel(0);
+    }
+
     loadLevel(0);
   </script>
 </body>
